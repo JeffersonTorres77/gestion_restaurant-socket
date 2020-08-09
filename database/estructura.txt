@@ -1,0 +1,23 @@
+CREATE TABLE `pedidos` (
+  `idPedido` int(11) NOT NULL PRIMARY KEY,
+  `idRestaurant` int(11) NOT NULL,
+  `idMesa` int(11) NOT NULL,
+  `idPlato` int(11) NOT NULL,
+  `nombrePlato` varchar(200) NOT NULL,
+  `idCombo` int(11) DEFAULT NULL,
+  `nombreCombo` varchar(100) DEFAULT NULL,
+  `loteCombo` int(11) DEFAULT 0,
+  `idAreaMonitoreo` int(11) NOT NULL,
+  `precioUnitario` double NOT NULL,
+  `cantidad` double NOT NULL,
+  `descuento` double NOT NULL,
+  `precioTotal` double NOT NULL,
+  `nota` text NOT NULL,
+  `status` int(11) NOT NULL,
+  `para_llevar` tinyint(4) NOT NULL,
+  `aux_1` text,
+  `aux_2` text,
+  `aux_3` text,
+  `fecha_registro` varchar(20) NOT NULL,
+  `fecha_modificacion` varchar(20) NOT NULL
+);
