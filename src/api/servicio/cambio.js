@@ -8,9 +8,8 @@ const io = require('socket.io-client');
 const objRespuesta = require('./../utils/respuesta');
 
 const RestaurantModel = require('./../../sistema/modelos/restaurantes/especifico');
-const MesaModel = require('./../../sistema/modelos/mesas/especifico');
-const MesasModel = require('./../../sistema/modelos/mesas/general');
-const PedidosModel = require('./../../sistema/modelos/pedidos/general');
+const UsuarioModel = require('./../../sistema/modelos/usuarios/especifico');
+const RolModel = require('./../../sistema/modelos/roles/especifico');
 
 module.exports = async (req, res) =>
 {
@@ -32,24 +31,19 @@ module.exports = async (req, res) =>
     let objRestaurant = new RestaurantModel(conn);
     await objRestaurant.iniciar(key.idRestaurant);
 
-    let objMesa = new MesaModel(conn);
-    await objMesa.iniciar(key.idUsuario);
+    let objUsuario = new UsuarioModel(conn);
+    await objUsuario.iniciar(key.idUsuario);
+
+    let objRol = new RolModel(conn);
+    await objRol.iniciar(objUsuario.idRol);
 
     // Validamos
-    if(objMesa.idRestaurant != objRestaurant.id) throw "La mesa seleccionada no pertenece al restaurant actual.";
+    if(objUsuario.idRestaurant != objRestaurant.id) throw "El usuario no pertenece al restaurant actual.";
     if(objRestaurant.activo == false) throw "El restaurant actual no esta activo.";
-    if(objMesa.status == "CERRADA") throw "La mesa actual esta cerrada.";
-    if(objRestaurant.servicio == false) throw "El servicio de mesas del restaurant actual no esta activo.";
-
-    // Conexión con la base de datos temporal
-    let pathDatabase = path.join(__dirname, "..", "..", "..", "database", `restaurant-${objRestaurant.id}.db`);
-    let connSqlite = new sqlite(pathDatabase);
-
-    // Realizamos la operación
-    await MesasModel.confirmar(connSqlite, objMesa.id);
+    if(objUsuario.activo == false) throw "El usuario actua no esta activo.";
+    if(objRol.responsable == false) throw "El usuario actual no tiene permisos de cambiar el status del servicio.";
 
     // Desconectamos de todas las base de datos
-    connSqlite.desconectar();
     conn.desconectar();
     
     // Enviamos a sockets
@@ -61,10 +55,20 @@ module.exports = async (req, res) =>
             ip: key.ip
         }
     });
-    socket.on('connect', () => {
-        socket.emit('actualizar-cocina');
-    });
 
-    // Mostramos
-    res.json(respuesta);
+    let evento = (objRestaurant.servicio) ? 'desactivar-servicio' : 'activar-servicio';
+
+    socket.on('connect', () => {
+        socket.emit(evento, []);
+
+        socket.on('ws:ok', (data) => {
+            // Mostramos
+            res.json(respuesta);
+        });
+        
+        socket.on('ws:error', (data) => {
+            respuesta = objRespuesta.errorAPI(data);
+            res.json(respuesta);
+        });
+    });
 }

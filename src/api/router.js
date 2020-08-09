@@ -8,6 +8,7 @@ const ConsultarCantidadPedidos = require('./consultar/cantidad-pedidos');
 const ELiminarPlatos = require('./platos/eliminar');
 const ELiminarCombos = require('./combos/eliminar');
 const ConfirmarPedidos = require('./pedidos/confirmar');
+const ServicioCambio = require('./servicio/cambio');
 
 module.exports = function(app)
 {
@@ -96,6 +97,19 @@ module.exports = function(app)
     {
         try {
             await ConfirmarPedidos(req, res);
+        } catch(e) {
+            if(showConsole) console.log(e);
+            res.send(objRespuesta.errorAPI(e));
+        }
+    });
+
+    /**
+     * 
+     */
+    app.post('/Servicio/Cambio/', async(req, res) =>
+    {
+        try {
+            await ServicioCambio(req, res);
         } catch(e) {
             if(showConsole) console.log(e);
             res.send(objRespuesta.errorAPI(e));

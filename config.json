@@ -8,6 +8,7 @@
         "database": "gestion_resturants"
     },
 
-    "showConsole": false,
-    "version": "1.0.0"
+    "showConsole": true,
+    "version": "1.0.0",
+    "urlWS": "http://localhost:3000/"
 }

@@ -4,7 +4,6 @@ const showConsole = require('./../../config.json').showConsole;
 const monitoreoCocina = require('./eventos/monitoreo-cocina');
 const monitoreoCamarero = require('./eventos/monitoreo-camarero');
 const monitoreoCaja = require('./eventos/monitoreo-caja');
-const mesasServicio = require('./eventos/mesas-servicio');
 const serverClientIO = require('./eventos/server');
 
 module.exports = function(io)
@@ -49,10 +48,6 @@ module.exports = function(io)
             else if(clasificacion == "monitoreo-caja")
             {
                 monitoreoCaja(io, socket);
-            }
-            else if(clasificacion == "mesas-servicio")
-            {
-                mesasServicio(io, socket);
             }
         }
         else if(socket.datos.area == "SERVER")
