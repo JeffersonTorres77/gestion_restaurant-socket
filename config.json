@@ -8,6 +8,6 @@
         "database": "gestion_resturants"
     },
 
-    "showConsole": true,
+    "showConsole": false,
     "version": "1.0.0"
 }
