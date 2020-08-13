@@ -8,6 +8,7 @@ module.exports = class MesaModel
         this.alias = null;
         this.usuario = null;
         this.clave = null;
+        this.solicitar_camarero = null;
         this.fecha_registro = null;
 
         this.conn = conn;
@@ -31,6 +32,14 @@ module.exports = class MesaModel
         this.alias = datos[0].alias;
         this.usuario = datos[0].usuario;
         this.clave = datos[0].clave;
+        this.solicitar_camarero = (datos[0].solicitar_camarero == '1') ? true : false;
         this.fecha_registro = datos[0].fecha_registro;
+    }
+
+    async setLlamarCamarero(valor)
+    {
+        valor = (valor) ? '1' : '0';
+        let query = `UPDATE mesas SET solicitar_camarero = '${valor}' WHERE idMesa = '${this.id}'`;
+        let resp = await this.conn.ejecutar(query);
     }
 }

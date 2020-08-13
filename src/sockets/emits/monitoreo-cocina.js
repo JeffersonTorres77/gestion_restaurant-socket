@@ -76,7 +76,7 @@ module.exports = {
             let plato = {
                 id: objPlato.id,
                 nombre: objPlato.nombre,
-                imagen: objRestaurant.id+"/"+objPlato.imagen
+                imagen: objPlato.imagen
             };
 
             let categoria = {

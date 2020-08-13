@@ -39,4 +39,20 @@ module.exports = function(io, socket)
             if(showConsole) console.log(err);
         }
     });
+
+    /**
+     * 
+     */
+    socket.on('quitar-alarma', async (data) =>
+    {
+        try
+        {
+            await EmitMonitoreoCamarero.QuitarAlarma(io, socket, data);
+        }
+        catch(err)
+        {
+            socket.emit('ws:error', err);
+            if(showConsole) console.log(err);
+        }
+    });
 }

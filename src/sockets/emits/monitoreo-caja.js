@@ -11,6 +11,8 @@ const ComboModel = require('./../../sistema/modelos/combos/especifico');
 const PedidoModel = require('./../../sistema/modelos/pedidos/especifico');
 const PedidosModel = require('./../../sistema/modelos/pedidos/general');
 const UsuarioModel = require('./../../sistema/modelos/usuarios/especifico');
+const FacturaModel = require('./../../sistema/modelos/facturas/especifico');
+const FacturasModel = require('./../../sistema/modelos/facturas/general');
 
 module.exports = {
     actualizarTodo: async (io, socket, data) =>
@@ -62,19 +64,20 @@ module.exports = {
                     combo = {
                         id: objCombo.id,
                         nombre: objCombo.nombre,
-                        imagen: `${objRestaurant.id}/${objCombo.imagen}`
+                        imagen: objCombo.imagen
                     };
                 }
 
                 let mesa = {
                     id: objMesa.id,
-                    nombre: objMesa.alias
+                    nombre: objMesa.alias,
+                    solicitar_camarero: objMesa.solicitar_camarero
                 };
     
                 let plato = {
                     id: objPlato.id,
                     nombre: objPlato.nombre,
-                    imagen: objRestaurant.id+"/"+objPlato.imagen
+                    imagen: objPlato.imagen
                 };
                 pedido.imagenPlato = plato.imagen;
     
@@ -151,7 +154,8 @@ module.exports = {
                 alias: objMesa.alias,
                 status: objMesa.status,
                 usuario: objMesa.usuario,
-                pedidos: pedidos
+                pedidos: pedidos,
+                solicitar_camarero: (objMesa.solicitar_camarero == '1')
             });
         }
 
@@ -163,6 +167,9 @@ module.exports = {
         socket.emit('actualizar-todo', mesas);
     },
 
+    /**
+     * 
+     */
     cambio: async (io, socket, data) =>
     {
         // Enviamos
@@ -170,9 +177,126 @@ module.exports = {
         io.in(`monitoreo-caja-${idRestaurant}`).emit('cambio');
     },
 
+    /**
+     * 
+     */
     facturar: async (io, socket, data) =>
     {
-        socket.emit('ws:error', 'En desarrollo');
-        // Enviar a caja y camarero
+        // Parametros
+        let idMesa = data.idMesa;
+        let idsPedidos = data.idsPedidos;
+        let numeroFactura = data.numero_factura;
+
+        if(idMesa == undefined) {
+            throw "No se ha enviado el parametro 'idMesa'.";
+        }
+
+        if(idsPedidos == undefined) {
+            throw "No se ha enviado el parametro 'idsPedidos'.";
+        }
+
+        if(numeroFactura == undefined) {
+            throw "No se ha enviado el parametro 'numeroFactura'.";            
+        }
+
+        // Iniciamos la conexion
+        let conn = new mysql();
+        conn.conectar();
+
+        // Objetos basicos
+        let objRestaurant = new RestaurantModel(conn);
+        await objRestaurant.iniciar(socket.datos.idRestaurant);
+
+        let objUsuario = new UsuarioModel(conn);
+        await objUsuario.iniciar(socket.datos.idUsuario);
+
+        let objMesa = new MesaModel(conn);
+        await objMesa.iniciar(idMesa);
+
+        // Validamos
+        if(objUsuario.idRestaurant != objRestaurant.id) throw "El usuario no pertenece al restaurant actual.";
+        if(objRestaurant.activo == false) throw "El restaurant actual no esta activo.";
+        if(objUsuario.activo == false) throw "El usuario actual no esta activo.";
+        if(objRestaurant.servicio == false) throw "El servicio de mesas del restaurant actual no esta activo.";
+
+        if(objMesa.idRestaurant != objRestaurant.id) throw "La mesa seleccionada no pertenece al restaurant actual.";
+
+        // Conexión con la base de datos temporal
+        let pathDatabase = path.join(__dirname, "..", "..", "..", "database", `restaurant-${objRestaurant.id}.db`);
+        let connSqlite = new sqlite(pathDatabase);
+
+        // Proceso
+        let totalFactura = 0;
+        let pedidosArray = [];
+        for(let idPedido of idsPedidos)
+        {
+            let objPedido = new PedidoModel(connSqlite);
+            await objPedido.iniciar(idPedido);
+            pedidosArray.push(objPedido);
+            totalFactura = Number(totalFactura) + Number(objPedido.precioTotal);
+        }
+
+        totalFactura = totalFactura.toFixed(2);
+        let objFactura = await FacturasModel.registrar(conn, objRestaurant.id, numeroFactura, totalFactura);
+
+        for(let objPedido of pedidosArray)
+        {
+            objPedido.status = 5;
+            await objFactura.agregarDetalle(objPedido, objFactura.id);
+            await objPedido.eliminar();
+        }
+
+        // Desconectamos de todas las base de datos
+        connSqlite.desconectar();
+        conn.desconectar();
+
+        // Enviamos
+        let idRestaurant = socket.datos.idRestaurant;
+        io.in(`monitoreo-caja-${idRestaurant}`).emit('cambio');
+    },
+
+    /**
+     * 
+     */
+    QuitarAlarma: async(io, socket, data) =>
+    {
+        // Parametros
+        let idMesa = data.idMesa;
+        if(idMesa == null) {
+            socket.emit('ws:error', "No se envio el 'idMesa'.");
+            return;
+        }
+
+        // Iniciamos la conexion
+        let conn = new mysql();
+        conn.conectar();
+
+        // Objetos basicos
+        let objRestaurant = new RestaurantModel(conn);
+        await objRestaurant.iniciar(socket.datos.idRestaurant);
+
+        let objUsuario = new UsuarioModel(conn);
+        await objUsuario.iniciar(socket.datos.idUsuario);
+
+        let objMesa = new MesaModel(conn);
+        await objMesa.iniciar(idMesa);
+
+        // Validamos
+        if(objUsuario.idRestaurant != objRestaurant.id) throw "El usuario no pertenece al restaurant actual.";
+        if(objRestaurant.activo == false) throw "El restaurant actual no esta activo.";
+        if(objUsuario.activo == false) throw "El usuario actual no esta activo.";
+        if(objRestaurant.servicio == false) throw "El servicio de mesas del restaurant actual no esta activo.";
+
+        if(objMesa.idRestaurant != objRestaurant.id) throw "La mesa solicitada no pertenece al restaurant actual.";
+
+        await objMesa.setLlamarCamarero(false);
+
+        // Desconectamos de todas las base de datos
+        conn.desconectar();
+
+        // Enviamos
+        let idRestaurant = socket.datos.idRestaurant;
+        io.in(`monitoreo-camarero-${idRestaurant}`).emit('cambio');
+        io.in(`monitoreo-caja-${idRestaurant}`).emit('cambio');
     }
 }

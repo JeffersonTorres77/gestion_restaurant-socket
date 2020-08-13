@@ -9,6 +9,7 @@ const ELiminarPlatos = require('./platos/eliminar');
 const ELiminarCombos = require('./combos/eliminar');
 const ConfirmarPedidos = require('./pedidos/confirmar');
 const ServicioCambio = require('./servicio/cambio');
+const Camarero = require('./camarero/llamar');
 
 module.exports = function(app)
 {
@@ -110,6 +111,32 @@ module.exports = function(app)
     {
         try {
             await ServicioCambio(req, res);
+        } catch(e) {
+            if(showConsole) console.log(e);
+            res.send(objRespuesta.errorAPI(e));
+        }
+    });
+
+    /**
+     * 
+     */
+    app.post('/Camarero/Consultar/', async(req, res) =>
+    {
+        try {
+            await Camarero.Consultar(req, res);
+        } catch(e) {
+            if(showConsole) console.log(e);
+            res.send(objRespuesta.errorAPI(e));
+        }
+    });
+
+    /**
+     * 
+     */
+    app.post('/Camarero/Llamar/', async(req, res) =>
+    {
+        try {
+            await Camarero.Llamar(req, res);
         } catch(e) {
             if(showConsole) console.log(e);
             res.send(objRespuesta.errorAPI(e));

@@ -58,7 +58,7 @@ module.exports = async (req, res) =>
         {
             let objPlato = new PlatoModel(conn);
             await objPlato.iniciar(pedido.idPlato);
-            pedido.imagenPlato = `${objRestaurant.id}/${objPlato.imagen}`;
+            pedido.imagenPlato = objPlato.imagen;
 
             pedidosSalida.push({
                 esCombo: esCombo,
@@ -69,11 +69,11 @@ module.exports = async (req, res) =>
         {
             let objCombo = new ComboModel(conn);
             await objCombo.iniciar(pedido.idCombo);
-            let imagenCombo = `${objRestaurant.id}/${objCombo.imagen}`;
+            let imagenCombo = objCombo.imagen;
 
             let objPlato = new PlatoModel(conn);
             await objPlato.iniciar(pedido.idPlato);
-            pedido.imagenPlato = `${objRestaurant.id}/${objPlato.imagen}`;
+            pedido.imagenPlato = objPlato.imagen;
 
             let indexPedido = `lote_${pedido.loteCombo}`;
             let index = null;
