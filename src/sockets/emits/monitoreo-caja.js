@@ -241,7 +241,7 @@ module.exports = {
 
         for(let objPedido of pedidosArray)
         {
-            objPedido.status = 5;
+            objPedido.status = 4;
             await objFactura.agregarDetalle(objPedido, objFactura.id);
             await objPedido.eliminar();
         }
@@ -252,6 +252,64 @@ module.exports = {
 
         // Enviamos
         let idRestaurant = socket.datos.idRestaurant;
+        io.in(`monitoreo-camarero-${idRestaurant}`).emit('cambio');
+        io.in(`monitoreo-caja-${idRestaurant}`).emit('cambio');
+    },
+
+    /**
+     * 
+     */
+    eliminarPedido: async (io, socket, data) =>
+    {
+        // Parametros
+        let idPedido = data.idPedido;
+        let motivo = data.motivo;
+
+        if(idPedido == undefined) {
+            throw "No se ha enviado el parametro 'idPedido'.";
+        }
+
+        if(motivo == undefined) {
+            throw "No se ha enviado el parametro 'motivo'.";
+        }
+
+        // Iniciamos la conexion
+        let conn = new mysql();
+        conn.conectar();
+
+        // Objetos basicos
+        let objRestaurant = new RestaurantModel(conn);
+        await objRestaurant.iniciar(socket.datos.idRestaurant);
+
+        let objUsuario = new UsuarioModel(conn);
+        await objUsuario.iniciar(socket.datos.idUsuario);
+
+        // Validamos
+        if(objUsuario.idRestaurant != objRestaurant.id) throw "El usuario no pertenece al restaurant actual.";
+        if(objRestaurant.activo == false) throw "El restaurant actual no esta activo.";
+        if(objUsuario.activo == false) throw "El usuario actual no esta activo.";
+        if(objRestaurant.servicio == false) throw "El servicio de mesas del restaurant actual no esta activo.";
+
+        // Conexión con la base de datos temporal
+        let pathDatabase = path.join(__dirname, "..", "..", "..", "database", `restaurant-${objRestaurant.id}.db`);
+        let connSqlite = new sqlite(pathDatabase);
+
+        let objPedido = new PedidoModel(connSqlite);
+        await objPedido.iniciar(idPedido);
+        
+        if(objPedido.idRestaurant != objRestaurant.id) throw "El pedido solicitado no pertenece al restaurant actual.";
+
+        // Proceso
+        await PedidosModel.cancelar(conn, objPedido, motivo);
+        await objPedido.eliminar();
+
+        // Desconectamos de todas las base de datos
+        connSqlite.desconectar();
+        conn.desconectar();
+
+        // Enviamos
+        let idRestaurant = socket.datos.idRestaurant;
+        io.in(`monitoreo-camarero-${idRestaurant}`).emit('cambio');
         io.in(`monitoreo-caja-${idRestaurant}`).emit('cambio');
     },
 
