@@ -11,6 +11,7 @@ const EmitMonitoreoCaja = require('./../emits/monitoreo-caja');
 const RestaurantModel = require('./../../sistema/modelos/restaurantes/especifico');
 const UsuarioModel = require('./../../sistema/modelos/usuarios/especifico.js');
 const RolModel = require('./../../sistema/modelos/roles/especifico');
+const PedidosModel = require('./../../sistema/modelos/pedidos/general');
 
 /**
  * 
@@ -120,18 +121,41 @@ module.exports = function(io, socket)
             }
 
             let pathDatabase = path.join(__dirname, '..', '..', '..', 'database', `restaurant-${restaurant.id}.db`);
-            if(fs.existsSync(pathDatabase)) {
-                fs.writeFileSync(pathDatabase, "");
-                fs.unlinkSync(pathDatabase);
+            if(fs.existsSync(pathDatabase))
+            {
+                let connSqlite = new sqlite(pathDatabase);
+                try
+                {
+                    let pedidos = await PedidosModel.listado(connSqlite, `status <> '0'`);
+                    if(pedidos.length > 0)
+                    {
+                        socket.emit('ws:error', 'Finalice los pedidos activos antes de cerrar el servicio de mesas.');
+                        connSqlite.desconectar();
+                    }
+                    else
+                    {
+                        connSqlite.desconectar();
+                        BorrarBD(socket, pathDatabase);
+                        await restaurant.setServicio(false);
+                        NotificarATodos(io, socket, 'ws:error', 'Servicio de mesas cerrado.');
+                    }
+                }
+                catch(err)
+                {
+                    socket.emit('ws.error', 'Test');
+                    connSqlite.desconectar();
+                    BorrarBD(socket, pathDatabase);
+                    await restaurant.setServicio(false);
+                    NotificarATodos(io, socket, 'ws:error', 'Servicio de mesas cerrado.');
+                }
+            }
+            else
+            {
+                await restaurant.setServicio(false);
+                NotificarATodos(io, socket, 'ws:error', 'Servicio de mesas cerrado.');
             }
 
-            await restaurant.setServicio(false);
-            socket.emit('ws:ok', 'Ok');
-            
-            let idRestaurant = socket.datos.idRestaurant;
-            io.in(`monitoreo-cocina-${idRestaurant}`).emit('ws:error', 'Servicio de mesas cerrado.');
-            io.in(`monitoreo-camarero-${idRestaurant}`).emit('ws:error', 'Servicio de mesas cerrado.');
-            io.in(`monitoreo-caja-${idRestaurant}`).emit('ws:error', 'Servicio de mesas cerrado.');
+            conn.desconectar();
         }
         catch(err)
         {
@@ -139,4 +163,39 @@ module.exports = function(io, socket)
             if(showConsole) console.error(err);
         }
     });
+}
+
+/**
+ * 
+ * @param {*} path 
+ */
+function BorrarBD(socket, path)
+{
+    try
+    {
+        if(fs.existsSync(path)) {
+            fs.writeFileSync(path, "");
+            fs.unlinkSync(path);
+        }
+    }
+    catch(error)
+    {
+        socket.emit('ws:error', 'Ocurrio un error al intentar borrar la base de datos temporal, intentelo en un par de minutos.');
+    }
+}
+
+/**
+ * 
+ * @param {*} io 
+ * @param {*} socket 
+ * @param {*} event 
+ * @param {*} msj 
+ */
+function NotificarATodos(io, socket, event, msj)
+{
+    socket.emit('ws:ok', 'Ok');
+    let idRestaurant = socket.datos.idRestaurant;
+    io.in(`monitoreo-cocina-${idRestaurant}`).emit(event, msj);
+    io.in(`monitoreo-camarero-${idRestaurant}`).emit(event, msj);
+    io.in(`monitoreo-caja-${idRestaurant}`).emit(event, msj);
 }
