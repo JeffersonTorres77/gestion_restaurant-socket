@@ -199,6 +199,10 @@ module.exports = {
             throw "No se ha enviado el parametro 'numeroFactura'.";            
         }
 
+        if(idsPedidos.length <= 0) {
+            throw "Debe enviar almenos un pedido a facturar.";
+        }
+
         // Iniciamos la conexion
         let conn = new mysql();
         conn.conectar();
@@ -237,7 +241,7 @@ module.exports = {
         }
 
         totalFactura = totalFactura.toFixed(2);
-        let objFactura = await FacturasModel.registrar(conn, objRestaurant.id, numeroFactura, totalFactura);
+        let objFactura = await FacturasModel.registrar(conn, objRestaurant.id, numeroFactura, totalFactura, objRestaurant.idMoneda);
 
         for(let objPedido of pedidosArray)
         {

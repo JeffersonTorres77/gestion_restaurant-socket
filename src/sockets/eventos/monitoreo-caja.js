@@ -36,7 +36,7 @@ module.exports = function(io, socket)
         }
         catch(err)
         {
-            socket.emit('ws:error', err);
+            socket.emit('ws:error-factura', err);
             if(showConsole) console.log(err);
         }
     });
