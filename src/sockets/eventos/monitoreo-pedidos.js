@@ -4,7 +4,7 @@ const sqlite = require('./../../sistema/utils/sqlite3');
 const mysql = require('./../../sistema/utils/mysql');
 const showConsole = require('./../../../config.json').showConsole;
 
-const EmitMonitoreoCocina = require('./../emits/monitoreo-cocina');
+const EmitMonitoreoCocina = require('./../emits/monitoreo-pedidos');
 
 /**
  * 

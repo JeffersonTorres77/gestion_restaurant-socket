@@ -62,7 +62,7 @@ module.exports = async (req, res) =>
         }
     });
     socket.on('connect', () => {
-        socket.emit('actualizar-cocina');
+        socket.emit('actualizar-pedidos');
     });
 
     // Mostramos

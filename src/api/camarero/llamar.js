@@ -59,7 +59,7 @@ module.exports = {
             }
         });
         socket.on('connect', () => {
-            socket.emit('actualizar-cocina');
+            socket.emit('actualizar-pedidos');
         });
 
         res.json(respuesta);

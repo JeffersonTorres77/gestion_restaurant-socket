@@ -4,7 +4,7 @@ const showConsole = require('./../../../config.json').showConsole;
 const sqlite = require('./../../sistema/utils/sqlite3');
 const mysql = require('./../../sistema/utils/mysql');
 
-const EmitMonitoreoCocina = require('./../emits/monitoreo-cocina');
+const EmitMonitoreoCocina = require('./../emits/monitoreo-pedidos');
 const EmitMonitoreoCamarero = require('./../emits/monitoreo-camarero');
 const EmitMonitoreoCaja = require('./../emits/monitoreo-caja');
 
@@ -23,7 +23,7 @@ module.exports = function(io, socket)
     /**
      * Notificar a todos
      */
-    socket.on('actualizar-cocina', () => {
+    socket.on('actualizar-pedidos', () => {
         try {
             EmitMonitoreoCocina.cambio(io, socket, []);
             EmitMonitoreoCamarero.cambio(io, socket, []);
@@ -76,7 +76,7 @@ module.exports = function(io, socket)
             await restaurant.setServicio(true);
 
             let idRestaurant = socket.datos.idRestaurant;
-            io.in(`monitoreo-cocina-${idRestaurant}`).emit('cambio');
+            io.in(`monitoreo-pedidos-${idRestaurant}`).emit('cambio');
             io.in(`monitoreo-camarero-${idRestaurant}`).emit('cambio');
             io.in(`monitoreo-caja-${idRestaurant}`).emit('cambio');
 
@@ -195,7 +195,7 @@ function NotificarATodos(io, socket, event, msj)
 {
     socket.emit('ws:ok', 'Ok');
     let idRestaurant = socket.datos.idRestaurant;
-    io.in(`monitoreo-cocina-${idRestaurant}`).emit(event, msj);
+    io.in(`monitoreo-pedidos-${idRestaurant}`).emit(event, msj);
     io.in(`monitoreo-camarero-${idRestaurant}`).emit(event, msj);
     io.in(`monitoreo-caja-${idRestaurant}`).emit(event, msj);
 }

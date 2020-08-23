@@ -43,7 +43,7 @@ module.exports = {
         let pathDatabase = path.join(__dirname, "..", "..", "..", "database", `restaurant-${objRestaurant.id}.db`);
         let connSqlite = new sqlite(pathDatabase);
 
-        let condicional = (idAreaMonitoreo == "4") ? `status = '1'` : `status = '1' AND idAreaMonitoreo = '${idAreaMonitoreo}'`;
+        let condicional = (idAreaMonitoreo == "1") ? `status = '1'` : `status = '1' AND idAreaMonitoreo = '${idAreaMonitoreo}'`;
         let pedidos = await PedidosModel.listado(connSqlite, condicional);
 
         let datos = [];
@@ -115,7 +115,7 @@ module.exports = {
     {
         // Enviamos
         let idRestaurant = socket.datos.idRestaurant;
-        io.in(`monitoreo-cocina-${idRestaurant}`).emit('cambio');
+        io.in(`monitoreo-pedidos-${idRestaurant}`).emit('cambio');
     },
 
     /**
@@ -164,7 +164,7 @@ module.exports = {
 
         // Enviamos
         let idRestaurant = socket.datos.idRestaurant;
-        io.in(`monitoreo-cocina-${idRestaurant}`).emit('cambio');
+        io.in(`monitoreo-pedidos-${idRestaurant}`).emit('cambio');
         io.in(`monitoreo-camarero-${idRestaurant}`).emit('cambio');
         io.in(`monitoreo-caja-${idRestaurant}`).emit('cambio');
     }

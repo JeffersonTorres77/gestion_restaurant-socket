@@ -10,7 +10,7 @@ const PlatoModel = require('./../../sistema/modelos/platos/especifico');
 const CategoriaModel = require('./../../sistema/modelos/categorias/especifico');
 const PedidosModel = require('./../../sistema/modelos/pedidos/general');
 
-const MonitoreoCocina = require('./../../sockets/emits/monitoreo-cocina');
+const MonitoreoCocina = require('./../../sockets/emits/monitoreo-pedidos');
 
 module.exports = async (req, res) =>
 {

@@ -1,7 +1,7 @@
 const queryio = require('./utils/query.io');
 const showConsole = require('./../../config.json').showConsole;
 
-const monitoreoCocina = require('./eventos/monitoreo-cocina');
+const monitoreoCocina = require('./eventos/monitoreo-pedidos');
 const monitoreoCamarero = require('./eventos/monitoreo-camarero');
 const monitoreoCaja = require('./eventos/monitoreo-caja');
 const serverClientIO = require('./eventos/server');
@@ -37,7 +37,7 @@ module.exports = function(io)
             let clasificacion = `${socket.datos.modulo}-${socket.datos.archivo}`;
             socket.join(sala);
 
-            if(clasificacion == "monitoreo-cocina")
+            if(clasificacion == "monitoreo-pedidos")
             {
                 monitoreoCocina(io, socket);
             }
