@@ -241,7 +241,7 @@ module.exports = {
         }
 
         totalFactura = totalFactura.toFixed(2);
-        let objFactura = await FacturasModel.registrar(conn, objRestaurant.id, numeroFactura, totalFactura, objRestaurant.idMoneda);
+        let objFactura = await FacturasModel.registrar(conn, objRestaurant.id, numeroFactura, totalFactura, objRestaurant.idMoneda, objMesa.id);
 
         for(let objPedido of pedidosArray)
         {

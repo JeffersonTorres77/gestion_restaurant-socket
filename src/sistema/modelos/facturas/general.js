@@ -10,7 +10,7 @@ module.exports = class FacturasModel
      * @param {*} total 
      * @param {*} idMoneda 
      */
-    static async registrar(conn, idRestaurant, numero, total, idMoneda)
+    static async registrar(conn, idRestaurant, numero, total, idMoneda, idMesa)
     {
         let now = new Date().toISOString().replace(/T/, ' ').replace(/\..+/, '');
         let datosMax = await conn.consultar("SELECT MAX(idFactura) AS maxID FROM facturas");
@@ -21,9 +21,9 @@ module.exports = class FacturasModel
         let hora = fechaArray[1];
 
         let query = `INSERT INTO facturas (
-            idFactura, idRestaurant, numero, idMoneda, total, fecha, hora
+            idFactura, idRestaurant, idMesa, numero, idMoneda, total, fecha, hora
         ) VALUES (
-            '${idFactura}', '${idRestaurant}', '${numero}', ${idMoneda}, '${total}', '${fecha}', '${hora}'
+            '${idFactura}', '${idRestaurant}', '${idMesa}', '${numero}', ${idMoneda}, '${total}', '${fecha}', '${hora}'
         )`;
         let resp = await conn.ejecutar(query);
 
