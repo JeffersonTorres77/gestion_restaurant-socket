@@ -13,6 +13,11 @@ const Camarero = require('./camarero/llamar');
 
 module.exports = function(app)
 {
+    app.get('/', async (req, res) =>
+    {
+        res.send('Servidor activo');
+    });
+
     /**
      * Registro de platos
      */
