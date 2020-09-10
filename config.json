@@ -2,13 +2,18 @@
     "BaseDatos":
     {
         "server": "localhost",
-        "port": "3306",
+        "port": 3306,
         "user": "root",
         "password": "",
         "database": "gestion_resturants"
     },
 
-    "showConsole": false,
+    "Sockets":
+    {
+        "port": 3000
+    },
+
+    "showConsole": true,
     "version": "0.3.0",
     "urlWS": "http://localhost:3000/"
 }
