@@ -8,6 +8,11 @@
         "database": "gestion_resturants"
     },
 
+    "Sockets":
+    {
+        "port": 3000
+    },
+
     "showConsole": false,
     "version": "0.3.0",
     "urlWS": "http://localhost:3000/"
