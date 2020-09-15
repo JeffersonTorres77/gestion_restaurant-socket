@@ -21,7 +21,7 @@ app.set('port', config.Sockets.port);
  */
 try {
 
-    //const router = require('./src/api/router')(app);
+    require('./src/api/router')(app);
 
 } catch(error) {
     config.Escribir(`API - ${error}`, "error");
@@ -42,9 +42,9 @@ try {
     /**
      * 
      */
-    //const SocketIO = require('socket.io');
-    //const io = SocketIO(server);
-    //const processIO = require('./src/sockets/io')(io);
+    const SocketIO = require('socket.io');
+    const io = SocketIO(server);
+    require('./src/sockets/io')(io);
 
 } catch(error) {
     config.Escribir(`SOCKET - ${error}`, "error");
