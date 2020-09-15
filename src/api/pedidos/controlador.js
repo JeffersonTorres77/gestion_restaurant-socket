@@ -11,7 +11,7 @@ const PlatoModel = require('./../../sistema/modelos/platos/especifico');
 const CategoriaModel = require('./../../sistema/modelos/categorias/especifico');
 const ComboModel = require('./../../sistema/modelos/combos/especifico');
 const MesasModel = require('./../../sistema/modelos/mesas/general');
-const { cambio } = require('../../../src-old/sockets/emits/monitoreo-caja');
+const FacturasModel = require('./../../sistema/modelos/facturas/general');
 
 module.exports = {
     /**
@@ -23,6 +23,7 @@ module.exports = {
         let cantidad = req.body.cantidad;
         let observaciones = req.body.observaciones;
         let para_llevar = (req.body.para_llevar == undefined) ? 0 : req.body.para_llevar;
+        para_llevar = (para_llevar || para_llevar == "true" || para_llevar == '1') ? 1 : 0;
 
         // Conectamos a MySQL
         let conn = new mysql();
@@ -32,6 +33,11 @@ module.exports = {
         let rutaDbSqlite = path.join(__dirname, '..', '..', '..', 'database', `restaurant-${req.objRestaurant.id}.db`);
         let connSqlite = new sqlite(rutaDbSqlite);
         connSqlite.conectar();
+
+        let idMesa = -1;
+        if(req.objMesa != undefined) {
+            idMesa = req.objMesa.id;
+        }
 
         // Buscamos el plato
         let objPlato = new PlatoModel(conn);
@@ -50,7 +56,7 @@ module.exports = {
         let objPedido = await PedidosModel.registrar(
             connSqlite, // Conexion
             req.objRestaurant.id, // id restaurant
-            req.objMesa.id, // id mesa
+            idMesa, // id mesa
             objPlato.id, // id plato
             objPlato.nombre, // nombre plato
             null, // id combo
@@ -82,6 +88,7 @@ module.exports = {
         let idCombo = req.body.idCombo;
         let platos = req.body.platos;
         let para_llevar = (req.body.para_llevar == undefined) ? 0 : req.body.para_llevar;
+        para_llevar = (para_llevar || para_llevar == "true" || para_llevar == '1') ? 1 : 0;
 
         // Conectamos a MySQL
         let conn = new mysql();
@@ -109,6 +116,11 @@ module.exports = {
                 conn.desconectar();
                 throw `La cantidad de platos (${cantActual}) en la categoria ${limiteCategorias[i].idCategoria} es distinto el limite (${limiteCategorias[i].cantidad}).`;
             }
+        }
+
+        let idMesa = -1;
+        if(req.objMesa != undefined) {
+            idMesa = req.objMesa.id;
         }
 
         // Conectamos a SQLite3
@@ -141,7 +153,7 @@ module.exports = {
             let objPedido = await PedidosModel.registrar(
                 connSqlite, // Conexion
                 req.objRestaurant.id, // id restaurant
-                req.objMesa.id, // id mesa
+                idMesa, // id mesa
                 objPlato.id, // id plato
                 objPlato.nombre, // nombre plato
                 objCombo.id, // id combo
@@ -207,6 +219,8 @@ module.exports = {
      * 
      */
     consulta: async (req, res) => {
+        let para_llevar = (req.body.para_llevar == "true" || req.body.para_llevar == "1") ? true : false;
+
         // Conectamos a MySQL
         let conn = new mysql();
         conn.conectar();
@@ -226,6 +240,10 @@ module.exports = {
             condicional += ` AND idMesa = '${req.objMesa.id}'`;
         }
 
+        if(para_llevar == true) {
+            condicional += ` AND para_llevar = '1'`;
+        }
+
         let arrayPedidos =  await PedidosModel.listado(connSqlite, condicional);
         let salida = {
             cantidad: arrayPedidos.length,
@@ -234,7 +252,6 @@ module.exports = {
 
         for(let filaPedido of arrayPedidos) {
 
-            delete filaPedido.aux_1;
             delete filaPedido.aux_2;
             delete filaPedido.aux_3;
 
@@ -269,7 +286,8 @@ module.exports = {
                         para_llevar: filaPedido.para_llevar,
                         status: filaPedido.status,
                         fecha_modificacion: filaPedido.fecha_modificacion,
-                        fecha_registro: filaPedido.fecha_registro
+                        fecha_registro: filaPedido.fecha_registro,
+                        numero_factura: filaPedido.aux_1
                     }]
                 });
                 
@@ -315,7 +333,8 @@ module.exports = {
                         para_llevar: filaPedido.para_llevar,
                         status: filaPedido.status,
                         fecha_modificacion: filaPedido.fecha_modificacion,
-                        fecha_registro: filaPedido.fecha_registro
+                        fecha_registro: filaPedido.fecha_registro,
+                        numero_factura: filaPedido.aux_1
                     });
 
                 } else {
@@ -339,7 +358,8 @@ module.exports = {
                             para_llevar: filaPedido.para_llevar,
                             status: filaPedido.status,
                             fecha_modificacion: filaPedido.fecha_modificacion,
-                            fecha_registro: filaPedido.fecha_registro
+                            fecha_registro: filaPedido.fecha_registro,
+                            numero_factura: filaPedido.aux_1
                         }]
                     });
 
@@ -367,8 +387,17 @@ module.exports = {
         connSqlite.conectar();
 
         // Realizamos la operación
-        let idMesa = (req.objMesa != undefined) ? req.objMesa.id : req.body.idMesa;
-        await MesasModel.confirmar(connSqlite, idMesa);
+        if(req.objMesa != undefined)
+        {
+            let idMesa = (req.objMesa != undefined) ? req.objMesa.id : req.body.idMesa;
+            await MesasModel.confirmar(connSqlite, idMesa);
+        }
+        else
+        {
+            let numero_factura = req.body.numero_factura;
+            if(numero_factura == undefined) throw "No se ha enviado el numero de factura.";
+            await MesasModel.confirmarParaLlevar(connSqlite, numero_factura);
+        }
 
         // Desconectamos
         connSqlite.desconectar();
@@ -407,6 +436,56 @@ module.exports = {
 
         // Respondemos
         res.json( respuesta.resp(resp) );
+    },
+
+    FacturarParaLlevar: async(req, res) => {
+        // Conectamos a MySQL
+        let conn = new mysql();
+        conn.conectar();
+
+        // Conectamos a SQLite3
+        let rutaDbSqlite = path.join(__dirname, '..', '..', '..', 'database', `restaurant-${req.objRestaurant.id}.db`);
+        let connSqlite = new sqlite(rutaDbSqlite);
+        connSqlite.conectar();
+
+        let pedidos = await PedidosModel.listado(connSqlite, `para_llevar = '1' AND status = '4'`);
+        let numeros_facturados = [];
+        for(let pedido of pedidos) {
+            if(numeros_facturados.includes(pedido.aux_1) == false) {
+                numeros_facturados.push(pedido.aux_1);
+            }
+        }
+
+        let idMesa = -1;
+
+        for(let numero_factura of numeros_facturados) {
+            let pedidosFactura = await PedidosModel.listado(connSqlite, `para_llevar = '1' AND status = '4' AND aux_1 = '${numero_factura}'`);
+            let totalFactura = 0;
+
+            for(let pedido of pedidosFactura) {
+                totalFactura = Number(totalFactura) + Number(pedido.precioTotal);
+            }
+
+            totalFactura = totalFactura.toFixed(2);
+            let objFactura = await FacturasModel.registrar(conn, req.objRestaurant.id, numero_factura, totalFactura, req.objRestaurant.idMoneda, idMesa);
+
+            for(let pedido of pedidosFactura)
+            {
+                let objPedido = new PedidoModel(connSqlite);
+                await objPedido.iniciar(pedido.idPedido);
+                objPedido.status = 4;
+                await objFactura.agregarDetalle(objPedido, objFactura.id);
+                await objPedido.eliminar();
+            }
+        }
+        
+
+        // Desconectamos
+        connSqlite.desconectar();
+        conn.desconectar();
+
+        // Respondemos
+        res.json( respuesta.resp(numeros_facturados) );
     }
 }
 

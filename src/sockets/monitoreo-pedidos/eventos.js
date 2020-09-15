@@ -35,8 +35,14 @@ module.exports =  (io, socket) => {
             let objCategoria = new CategoriaModel(conn);
             await objCategoria.iniciar(objPlato.idCategoria);
 
-            let objMesa = new MesaModel(conn);
-            await objMesa.iniciar(filaPedido.idMesa);
+            let objMesa = {
+                id: -1,
+                alias: "Para llevar"
+            };
+            if(filaPedido.idMesa != -1) {
+                objMesa = new MesaModel(conn);
+                await objMesa.iniciar(filaPedido.idMesa);
+            }
 
             let combo = null;
             if(filaPedido.loteCombo.toString() != '0') {

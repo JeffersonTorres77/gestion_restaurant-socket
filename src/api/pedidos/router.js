@@ -85,5 +85,19 @@ module.exports = (app) => {
         } catch(e) {
             res.json(respuesta.error(e));
         }
-    })
+    });
+
+    /**
+     * 
+     */
+    app.post('/pedidos/facturar/para_llevar', async(req, res) => {
+        try {
+            
+            req = await validaciones.request(req);
+            await controlador.FacturarParaLlevar(req, res);
+
+        } catch(e) {
+            res.json(respuesta.error(e));
+        }
+    });
 }

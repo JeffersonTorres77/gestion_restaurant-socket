@@ -10,6 +10,7 @@ const MesaModel = require('./../../sistema/modelos/mesas/especifico');
 const PlatoModel = require('./../../sistema/modelos/platos/especifico');
 const CategoriaModel = require('./../../sistema/modelos/categorias/especifico');
 const ComboModel = require('./../../sistema/modelos/combos/especifico');
+const FacturasModel = require('./../../sistema/modelos/facturas/general');
 
 module.exports =  (io, socket) => {
     /**
@@ -26,8 +27,14 @@ module.exports =  (io, socket) => {
 
         let respuesta = [];
 
-        let condicional = "";
+        let condicional = `idRestaurant = '${socket.datos.objRestaurant.id}'`;
         let mesas = await MesasModel.listado(conn, condicional);
+        mesas.push({
+            idMesa: -1,
+            alias: "Para llevar",
+            status: "ABIERTA",
+            solicitar_camarero: false
+        });
         for(let mesa of mesas)
         {
             let pedidosMesa = await PedidosModel.listado(connSqlite, `status <> '0' AND idMesa = '${mesa.idMesa}'`);
@@ -172,7 +179,15 @@ module.exports =  (io, socket) => {
 
         let objPedido = new PedidoModel(connSqlite);
         await objPedido.iniciar(idPedido);
-        await objPedido.setStatus(3);
+
+        if(objPedido.para_llevar == '1')
+        {
+            await objPedido.setStatus(4);
+        }
+        else
+        {
+            await objPedido.setStatus(3);
+        }
 
         // Desconectamos de todas las base de datos
         connSqlite.desconectar();
