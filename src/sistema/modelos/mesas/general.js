@@ -6,9 +6,11 @@ module.exports = class MesasModel
         let resp = await conn.ejecutar(query);
     }
 
-    static async confirmarParaLlevar(conn, numero_factura)
+    static async confirmarParaLlevar(conn)
     {
-        let query = `UPDATE pedidos SET aux_1 = '${numero_factura}', status = '1' WHERE para_llevar = '1' AND status = '0'`;
+        let maxLoteOrden = await conn.consultar(`SELECT MAX(loteOrden) AS maxLote FROM pedidos`);
+        let loteOrden = (maxLoteOrden != null) ? (maxLoteOrden[0]['maxLote'] + 1) : 1;
+        let query = `UPDATE pedidos SET loteOrden = '${loteOrden}', status = '1' WHERE para_llevar = '1' AND status = '0'`;
         let resp = await conn.ejecutar(query);
     }
 

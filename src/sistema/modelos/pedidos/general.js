@@ -55,12 +55,14 @@ module.exports = class PedidosModel
         let maxID = (dataMaxId != null) ? dataMaxId[0]['maxID'] : 0;
 
         let idPedido = maxID + 1;
+        let loteOrden = 0;
         let precioTotal = (cantidad * precioUnitario) * (1 - (descuento / 100));
         let fecha_registro = now;
         let fecha_modificacion = fecha_registro;
 
         let query = `INSERT INTO pedidos (
             idPedido,
+            loteOrden,
             idRestaurant,
             idMesa,
             idPlato,
@@ -80,6 +82,7 @@ module.exports = class PedidosModel
             fecha_modificacion
         ) VALUES (
             '${idPedido}',
+            '${loteOrden}',
             '${idRestaurant}',
             '${idMesa}',
             '${idPlato}',

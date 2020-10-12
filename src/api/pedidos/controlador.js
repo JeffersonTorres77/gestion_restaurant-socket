@@ -236,6 +236,10 @@ module.exports = {
             condicional += ` AND status = '${req.body.status}'`;
         }
 
+        if(req.body.no_status != undefined) {
+            condicional += ` AND status <> '${req.body.no_status}'`;
+        }
+
         if(req.objMesa != undefined) {
             condicional += ` AND idMesa = '${req.objMesa.id}'`;
         }
@@ -271,8 +275,10 @@ module.exports = {
 
                 salida.pedidos.push({
                     esCombo: false,
+                    loteOrden: filaPedido.loteOrden,
                     platos: [{
                         idPedido: filaPedido.idPedido,
+                        loteOrden: filaPedido.loteOrden,
                         idRestaurant: filaPedido.idRestaurant,
                         idMesa: filaPedido.idMesa,
                         idAreaMonitoreo: filaPedido.idAreaMonitoreo,
@@ -320,6 +326,7 @@ module.exports = {
 
                     salida.pedidos[index].platos.push({
                         idPedido: filaPedido.idPedido,
+                        loteOrden: filaPedido.loteOrden,
                         idRestaurant: filaPedido.idRestaurant,
                         idMesa: filaPedido.idMesa,
                         idAreaMonitoreo: filaPedido.idAreaMonitoreo,
@@ -343,6 +350,7 @@ module.exports = {
                         esCombo: true,
                         lote: filaPedido.loteCombo,
                         combo: objCombo,
+                        loteOrden: filaPedido.loteOrden,
                         platos: [{
                             idPedido: filaPedido.idPedido,
                             idRestaurant: filaPedido.idRestaurant,
@@ -394,9 +402,7 @@ module.exports = {
         }
         else
         {
-            let numero_factura = req.body.numero_factura;
-            if(numero_factura == undefined) throw "No se ha enviado el numero de factura.";
-            await MesasModel.confirmarParaLlevar(connSqlite, numero_factura);
+            await MesasModel.confirmarParaLlevar(connSqlite);
         }
 
         // Desconectamos
@@ -439,6 +445,9 @@ module.exports = {
     },
 
     FacturarParaLlevar: async(req, res) => {
+        let loteOrden = req.body.loteOrden;
+        if(loteOrden == undefined) throw 'No se ha enviado el "loteOrden".';
+
         // Conectamos a MySQL
         let conn = new mysql();
         conn.conectar();
@@ -448,44 +457,39 @@ module.exports = {
         let connSqlite = new sqlite(rutaDbSqlite);
         connSqlite.conectar();
 
-        let pedidos = await PedidosModel.listado(connSqlite, `para_llevar = '1' AND status = '4'`);
-        let numeros_facturados = [];
-        for(let pedido of pedidos) {
-            if(numeros_facturados.includes(pedido.aux_1) == false) {
-                numeros_facturados.push(pedido.aux_1);
-            }
-        }
+        let pedidos = await PedidosModel.listado(connSqlite, `para_llevar = '1' AND loteOrden = '${loteOrden}'`);
 
         let idMesa = -1;
+        let totalFactura = 0;
 
-        for(let numero_factura of numeros_facturados) {
-            let pedidosFactura = await PedidosModel.listado(connSqlite, `para_llevar = '1' AND status = '4' AND aux_1 = '${numero_factura}'`);
-            let totalFactura = 0;
-
-            for(let pedido of pedidosFactura) {
-                totalFactura = Number(totalFactura) + Number(pedido.precioTotal);
-            }
-
-            totalFactura = totalFactura.toFixed(2);
-            let objFactura = await FacturasModel.registrar(conn, req.objRestaurant.id, numero_factura, totalFactura, req.objRestaurant.idMoneda, idMesa);
-
-            for(let pedido of pedidosFactura)
-            {
-                let objPedido = new PedidoModel(connSqlite);
-                await objPedido.iniciar(pedido.idPedido);
-                objPedido.status = 4;
-                await objFactura.agregarDetalle(objPedido, objFactura.id);
-                await objPedido.eliminar();
-            }
+        for(let pedido of pedidos) {
+            totalFactura = Number(totalFactura) + Number(pedido.precioTotal);
         }
-        
+
+        totalFactura = totalFactura.toFixed(2);
+        let objFactura = await FacturasModel.registrar(
+            conn,
+            req.objRestaurant.id,
+            totalFactura,
+            req.objRestaurant.idMoneda,
+            idMesa
+            );
+
+        for(let pedido of pedidos)
+        {
+            let objPedido = new PedidoModel(connSqlite);
+            await objPedido.iniciar(pedido.idPedido);
+            objPedido.status = 4;
+            await objFactura.agregarDetalle(objPedido, objFactura.id);
+            await objPedido.eliminar();
+        }
 
         // Desconectamos
         connSqlite.desconectar();
         conn.desconectar();
 
         // Respondemos
-        res.json( respuesta.resp(numeros_facturados) );
+        res.json( respuesta.resp(loteOrden) );
     }
 }
 

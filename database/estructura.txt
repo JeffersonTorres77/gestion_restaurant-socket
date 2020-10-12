@@ -1,5 +1,6 @@
 CREATE TABLE `pedidos` (
   `idPedido` int(11) NOT NULL PRIMARY KEY,
+  `loteOrden` int(11) NOT NULL,
   `idRestaurant` int(11) NOT NULL,
   `idMesa` int(11) NOT NULL,
   `idPlato` int(11) NOT NULL,

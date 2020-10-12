@@ -3,6 +3,7 @@ module.exports = class MesaModel
     constructor(conn)
     {
         this.id = null;
+        this.loteOrden = null;
         this.idRestaurant = null;
         this.idMesa = null;
         this.idPlato = null;
@@ -37,6 +38,7 @@ module.exports = class MesaModel
         }
 
         this.id = datos[0].idPedido;
+        this.loteOrden = datos[0].loteOrden;
         this.idRestaurant = datos[0].idRestaurant;
         this.idMesa = datos[0].idMesa;
         this.idPlato = datos[0].idPlato;

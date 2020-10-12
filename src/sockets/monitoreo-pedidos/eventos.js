@@ -108,7 +108,15 @@ module.exports =  (io, socket) => {
 
         let objPedido = new PedidoModel(connSqlite);
         await objPedido.iniciar(idPedido);
-        await objPedido.setStatus(2);
+
+        if(objPedido.para_llevar == '1')
+        {
+            await objPedido.setStatus(4);
+        }
+        else
+        {
+            await objPedido.setStatus(2);
+        }
 
         // Desconectamos de todas las base de datos
         connSqlite.desconectar();
