@@ -417,6 +417,7 @@ module.exports = {
 
     camarero: async(req, res) => {
         let accion = req.body.accion.toLowerCase();
+        let cuenta = (req.body.cuenta == undefined) ? false : true;
         let resp = {};
 
         // Conectamos a MySQL
@@ -430,7 +431,17 @@ module.exports = {
 
         } else if(accion == "cambiar") {
 
-            let status = !req.objMesa.solicitar_camarero;
+            let status = '0';
+            let statusActual = req.objMesa.solicitar_camarero;
+
+            if(cuenta) {
+                if(statusActual == '0') status = '2';
+                if(statusActual == '1') status = '2';
+            } else {
+                if(statusActual == '0') status = '1';
+                if(statusActual == '2') status = '1';
+            }
+
             await req.objMesa.setLlamarCamarero(status);
             resp.status = status;
             NotificarCambio(req.body.key);
