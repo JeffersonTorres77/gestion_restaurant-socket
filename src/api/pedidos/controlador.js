@@ -254,10 +254,15 @@ module.exports = {
             pedidos: []
         };
 
+        let iva = req.objRestaurant.iva;
+
         for(let filaPedido of arrayPedidos) {
 
             delete filaPedido.aux_2;
             delete filaPedido.aux_3;
+
+            let precioUnitario = Number(filaPedido.precioUnitario) * (1 + (Number(iva) / 100));
+            let precioTotal = Number(filaPedido.precioTotal) * (1 + (Number(iva) / 100));
 
             if(filaPedido.loteCombo == 0) {
 
@@ -287,8 +292,8 @@ module.exports = {
                         nota: filaPedido.nota,
                         cantidad: filaPedido.cantidad,
                         descuento: filaPedido.descuento,
-                        precioUnitario: filaPedido.precioUnitario,
-                        precioTotal: filaPedido.precioTotal,
+                        precioUnitario: precioUnitario.toFixed(2),
+                        precioTotal: precioTotal.toFixed(2),
                         para_llevar: filaPedido.para_llevar,
                         status: filaPedido.status,
                         fecha_modificacion: filaPedido.fecha_modificacion,
@@ -335,8 +340,8 @@ module.exports = {
                         nota: filaPedido.nota,
                         cantidad: filaPedido.cantidad,
                         descuento: filaPedido.descuento,
-                        precioUnitario: filaPedido.precioUnitario,
-                        precioTotal: filaPedido.precioTotal,
+                        precioUnitario: precioUnitario.toFixed(2),
+                        precioTotal: precioTotal.toFixed(2),
                         para_llevar: filaPedido.para_llevar,
                         status: filaPedido.status,
                         fecha_modificacion: filaPedido.fecha_modificacion,
@@ -361,8 +366,8 @@ module.exports = {
                             nota: filaPedido.nota,
                             cantidad: filaPedido.cantidad,
                             descuento: filaPedido.descuento,
-                            precioUnitario: filaPedido.precioUnitario,
-                            precioTotal: filaPedido.precioTotal,
+                            precioUnitario: precioUnitario.toFixed(2),
+                            precioTotal: precioTotal.toFixed(2),
                             para_llevar: filaPedido.para_llevar,
                             status: filaPedido.status,
                             fecha_modificacion: filaPedido.fecha_modificacion,

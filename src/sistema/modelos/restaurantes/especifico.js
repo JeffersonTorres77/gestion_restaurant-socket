@@ -8,6 +8,7 @@ module.exports = class RestaurantModel
         this.idMoneda = null;
         this.activo = null;
         this.servicio = null;
+        this.iva = null;
         this.fecha_registro = null;
 
         this.conn = conn;
@@ -31,6 +32,7 @@ module.exports = class RestaurantModel
         this.idMoneda = datos[0].idMoneda;
         this.activo = (datos[0].activo == '1') ? true : false;
         this.servicio = (datos[0].servicio == '1') ? true : false;
+        this.iva = (isNaN(datos[0].iva)) ? 0 : Number(datos[0].iva);
         this.fecha_registro = datos[0].fecha_registro;
     }
 

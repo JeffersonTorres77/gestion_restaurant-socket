@@ -27,6 +27,8 @@ module.exports =  (io, socket) => {
 
         let respuesta = [];
 
+        let iva = socket.datos.objRestaurant.iva;
+
         let condicional = "";
         let mesas = await MesasModel.listado(conn, condicional);
         for(let mesa of mesas)
@@ -34,6 +36,9 @@ module.exports =  (io, socket) => {
             let pedidosMesa = await PedidosModel.listado(connSqlite, `status <> '0' AND idMesa = '${mesa.idMesa}'`);
             let arrayPedidos = [];
             for(let filaPedido of pedidosMesa) {
+                let precioUnitario = Number(filaPedido.precioUnitario) * (1 + Number(iva) / 100);
+                let precioTotal = Number(filaPedido.precioTotal) * (1 + Number(iva) / 100);
+
                 if(filaPedido.loteCombo == 0)
                 {
                     let objPlato = new PlatoModel(conn);
@@ -57,8 +62,8 @@ module.exports =  (io, socket) => {
                             nota: filaPedido.nota,
                             cantidad: filaPedido.cantidad,
                             descuento: filaPedido.descuento,
-                            precioUnitario: filaPedido.precioUnitario,
-                            precioTotal: filaPedido.precioTotal,
+                            precioUnitario: precioUnitario.toFixed(2),
+                            precioTotal: precioTotal.toFixed(2),
                             para_llevar: filaPedido.para_llevar,
                             status: filaPedido.status,
                             fecha_modificacion: filaPedido.fecha_modificacion,
@@ -101,8 +106,8 @@ module.exports =  (io, socket) => {
                             nota: filaPedido.nota,
                             cantidad: filaPedido.cantidad,
                             descuento: filaPedido.descuento,
-                            precioUnitario: filaPedido.precioUnitario,
-                            precioTotal: filaPedido.precioTotal,
+                            precioUnitario: precioUnitario.toFixed(2),
+                            precioTotal: precioTotal.toFixed(2),
                             para_llevar: filaPedido.para_llevar,
                             status: filaPedido.status,
                             fecha_modificacion: filaPedido.fecha_modificacion,
@@ -125,8 +130,8 @@ module.exports =  (io, socket) => {
                                 nota: filaPedido.nota,
                                 cantidad: filaPedido.cantidad,
                                 descuento: filaPedido.descuento,
-                                precioUnitario: filaPedido.precioUnitario,
-                                precioTotal: filaPedido.precioTotal,
+                                precioUnitario: precioUnitario.toFixed(2),
+                                precioTotal: precioTotal.toFixed(2),
                                 para_llevar: filaPedido.para_llevar,
                                 status: filaPedido.status,
                                 fecha_modificacion: filaPedido.fecha_modificacion,
