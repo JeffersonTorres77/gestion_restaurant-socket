@@ -10,7 +10,8 @@ module.exports = class MesaModel
         this.idRestaurant = null;
         this.idMesa = null;
         this.idMoneda = null;
-        this.total = null;
+        this.subtotal = null;
+        this.iva = null;
 
         this.conn = conn;
         return this;
@@ -35,7 +36,8 @@ module.exports = class MesaModel
         this.idRestaurant = datos[0].idRestaurant;
         this.idMesa = datos[0].idMesa;
         this.idMoneda = datos[0].idMoneda;
-        this.total = datos[0].total;
+        this.subtotal = datos[0].subtotal;
+        this.iva = datos[0].iva;
     }
 
     /**

@@ -476,19 +476,20 @@ module.exports = {
         let pedidos = await PedidosModel.listado(connSqlite, `para_llevar = '1' AND loteOrden = '${loteOrden}'`);
 
         let idMesa = -1;
-        let totalFactura = 0;
+        let subtotalFactura = 0;
 
         for(let pedido of pedidos) {
-            totalFactura = Number(totalFactura) + Number(pedido.precioTotal);
+            subtotalFactura = Number(subtotalFactura) + Number(pedido.precioTotal);
         }
 
-        totalFactura = totalFactura.toFixed(2);
+        subtotalFactura = subtotalFactura.toFixed(2);
         let objFactura = await FacturasModel.registrar(
             conn,
             req.objRestaurant.id,
-            totalFactura,
+            subtotalFactura,
             req.objRestaurant.idMoneda,
-            idMesa
+            idMesa,
+            req.objRestaurant.iva
             );
 
         for(let pedido of pedidos)

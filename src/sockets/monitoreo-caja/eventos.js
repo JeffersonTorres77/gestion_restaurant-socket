@@ -224,8 +224,6 @@ module.exports =  (io, socket) => {
         if(idMesa == undefined) throw "No se ha enviado el parametro 'idMesa'.";
         let idsPedidos = data.idsPedidos;
         if(idsPedidos == undefined) throw "No se ha enviado el parametro 'idsPedidos'.";
-        let numeroFactura = data.numero_factura;
-        if(numeroFactura == undefined) throw "No se ha enviado el parametro 'numeroFactura'.";
 
         if(idsPedidos.length <= 0) throw "Debe enviar almenos un pedido a facturar.";
 
@@ -255,7 +253,7 @@ module.exports =  (io, socket) => {
         }
 
         totalFactura = totalFactura.toFixed(2);
-        let objFactura = await FacturasModel.registrar(conn, objRestaurant.id, numeroFactura, totalFactura, objRestaurant.idMoneda, objMesa.id);
+        let objFactura = await FacturasModel.registrar(conn, objRestaurant.id, totalFactura, objRestaurant.idMoneda, objMesa.id, objRestaurant.iva);
 
         for(let objPedido of pedidosArray)
         {
