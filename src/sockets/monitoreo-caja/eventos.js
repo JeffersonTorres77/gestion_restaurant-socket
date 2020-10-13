@@ -266,6 +266,10 @@ module.exports =  (io, socket) => {
         connSqlite.desconectar();
         conn.desconectar();
 
+        socket.emit('imprimir', {
+            idFactura: objFactura.id
+        });
+
         // Enviamos
         io.in("MonitoreoPedidos" + socket.datos.objRestaurant.id).emit('cambio');
         io.in("MonitoreoCamarero" + socket.datos.objRestaurant.id).emit('cambio');

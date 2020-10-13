@@ -506,7 +506,10 @@ module.exports = {
         conn.desconectar();
 
         // Respondemos
-        res.json( respuesta.resp(loteOrden) );
+        res.json( respuesta.resp({
+            loteOrden: loteOrden,
+            idFactura: objFactura.id
+        }) );
     }
 }
 
