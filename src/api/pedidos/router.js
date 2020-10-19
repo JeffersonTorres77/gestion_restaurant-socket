@@ -1,6 +1,7 @@
 const respuesta = require('./../response');
 const validaciones = require('./../validaciones');
 const controlador = require('./controlador');
+const CONFIG = require('./../../sistema/config');
 
 module.exports = (app) => {
     /**
@@ -13,6 +14,7 @@ module.exports = (app) => {
             await controlador.registroPlato(req, res);
             
         } catch(e) {
+            if(CONFIG.showConsole) console.log(e);
             res.json(respuesta.error(e));
         }
     });
@@ -27,6 +29,7 @@ module.exports = (app) => {
             await controlador.registroCombo(req, res);
 
         } catch(e) {
+            if(CONFIG.showConsole) console.log(e);
             res.json(respuesta.error(e));
         }
     });
@@ -41,6 +44,7 @@ module.exports = (app) => {
             await controlador.eliminar(req, res);
 
         } catch(e) {
+            if(CONFIG.showConsole) console.log(e);
             res.json(respuesta.error(e));
         }
     });
@@ -55,6 +59,7 @@ module.exports = (app) => {
             await controlador.consulta(req, res);
 
         } catch(e) {
+            if(CONFIG.showConsole) console.log(e);
             res.json(respuesta.error(e));
         }
     });
@@ -69,6 +74,7 @@ module.exports = (app) => {
             await controlador.confirmar(req, res);
 
         } catch(e) {
+            if(CONFIG.showConsole) console.log(e);
             res.json(respuesta.error(e));
         }
     });
@@ -83,6 +89,7 @@ module.exports = (app) => {
             await controlador.camarero(req, res);
 
         } catch(e) {
+            if(CONFIG.showConsole) console.log(e);
             res.json(respuesta.error(e));
         }
     });
@@ -97,6 +104,7 @@ module.exports = (app) => {
             await controlador.FacturarParaLlevar(req, res);
 
         } catch(e) {
+            if(CONFIG.showConsole) console.log(e);
             res.json(respuesta.error(e));
         }
     });

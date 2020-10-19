@@ -390,6 +390,8 @@ module.exports = {
     },
 
     confirmar: async(req, res) => {
+        let response = "Ok";
+
         // Conectamos a MySQL
         let conn = new mysql();
         conn.conectar();
@@ -407,7 +409,37 @@ module.exports = {
         }
         else
         {
-            await MesasModel.confirmarParaLlevar(connSqlite);
+            let loteOrden = await MesasModel.confirmarParaLlevar(connSqlite);
+            let pedidos = await PedidosModel.listado(connSqlite, `para_llevar = '1' AND loteOrden = '${loteOrden}'`);
+            let idMesa = -1;
+            let subtotalFactura = 0;
+
+            for(let pedido of pedidos) {
+                subtotalFactura = Number(subtotalFactura) + Number(pedido.precioTotal);
+            }
+
+            subtotalFactura = subtotalFactura.toFixed(2);
+            let objFactura = await FacturasModel.registrar(
+                conn,
+                req.objRestaurant.id,
+                subtotalFactura,
+                req.objRestaurant.idMoneda,
+                idMesa,
+                req.objRestaurant.iva
+            );
+
+            for(let pedido of pedidos)
+            {
+                let objPedido = new PedidoModel(connSqlite);
+                await objPedido.iniciar(pedido.idPedido);
+                objPedido.status = 4;
+                await objFactura.agregarDetalle(objPedido, objFactura.id);
+            }
+
+            response = {
+                loteOrden: loteOrden,
+                idFactura: objFactura.id
+            };
         }
 
         // Desconectamos
@@ -417,7 +449,7 @@ module.exports = {
         NotificarCambio(req.body.key);
 
         // Respondemos
-        res.json( respuesta.resp('Ok') );
+        res.json( respuesta.resp(response) );
     },
 
     camarero: async(req, res) => {
@@ -475,29 +507,29 @@ module.exports = {
 
         let pedidos = await PedidosModel.listado(connSqlite, `para_llevar = '1' AND loteOrden = '${loteOrden}'`);
 
-        let idMesa = -1;
-        let subtotalFactura = 0;
+        // let idMesa = -1;
+        // let subtotalFactura = 0;
 
-        for(let pedido of pedidos) {
-            subtotalFactura = Number(subtotalFactura) + Number(pedido.precioTotal);
-        }
+        // for(let pedido of pedidos) {
+        //     subtotalFactura = Number(subtotalFactura) + Number(pedido.precioTotal);
+        // }
 
-        subtotalFactura = subtotalFactura.toFixed(2);
-        let objFactura = await FacturasModel.registrar(
-            conn,
-            req.objRestaurant.id,
-            subtotalFactura,
-            req.objRestaurant.idMoneda,
-            idMesa,
-            req.objRestaurant.iva
-            );
+        // subtotalFactura = subtotalFactura.toFixed(2);
+        // let objFactura = await FacturasModel.registrar(
+        //     conn,
+        //     req.objRestaurant.id,
+        //     subtotalFactura,
+        //     req.objRestaurant.idMoneda,
+        //     idMesa,
+        //     req.objRestaurant.iva
+        // );
 
         for(let pedido of pedidos)
         {
             let objPedido = new PedidoModel(connSqlite);
             await objPedido.iniciar(pedido.idPedido);
-            objPedido.status = 4;
-            await objFactura.agregarDetalle(objPedido, objFactura.id);
+            // objPedido.status = 4;
+            // await objFactura.agregarDetalle(objPedido, objFactura.id);
             await objPedido.eliminar();
         }
 
@@ -507,8 +539,7 @@ module.exports = {
 
         // Respondemos
         res.json( respuesta.resp({
-            loteOrden: loteOrden,
-            idFactura: objFactura.id
+            loteOrden: loteOrden
         }) );
     }
 }
