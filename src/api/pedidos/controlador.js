@@ -537,6 +537,8 @@ module.exports = {
         connSqlite.desconectar();
         conn.desconectar();
 
+        NotificarCambio(req.body.key);
+
         // Respondemos
         res.json( respuesta.resp({
             loteOrden: loteOrden
